@@ -1,0 +1,73 @@
+﻿body {
+  padding: 0px;
+}
+
+#layout > header,
+.btns {
+  width: auto;
+}
+
+#sidebar {
+  width: 350px;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  right: 0;
+  overflow: hidden;
+  background: #fff;
+  z-index: 100;
+  padding: 18px;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-bottom: none;
+}
+
+#sidebar:hover {
+  overflow: auto;
+}
+
+#sidebar h1 {
+  font-size: 16px;
+}
+
+#sidebar h2 {
+  font-size: 12px;
+}
+
+#sidebar ul {
+  list-style: square;
+}
+
+#sidebar ul li a {
+  text-align: left;
+  line-height: 35px;
+  color: black;
+}
+
+#sidebar ul li a:hover {
+  color: cornflowerblue;
+}
+
+#toc-container {
+  padding-left: 0;
+}
+
+#editormd-view {
+  padding-left: 0;
+  padding-right: 350px;
+  margin: 0;
+}
+
+.toc-title {
+  text-align: center;
+}
+.toc-count {
+  text-align: center;
+  vertical-align: bottom;
+  color: #999;
+}
+
+#sidebar ul li a:link,
+#sidebar ul li a:visited {
+  text-decoration: none;
+}

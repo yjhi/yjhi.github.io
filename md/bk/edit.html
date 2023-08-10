@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <title>文档编辑</title>
+    <meta name="description" content=" Markdown Editer3. Written by yjh." />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/editormd.min.css" />
+  </head>
+
+  <body>
+    <div id="layout">
+      <div id="editormd-view"></div>
+    </div>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="editormd.min.js"></script>
+    <script src="js/jquery.cookie.min.js"></script>
+    <script type="text/javascript">
+      var editView;
+      function GetUrlParam(name) {
+        var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+
+        var r = window.location.search.substr(1).match(reg);
+
+        if (r != null) return unescape(r[2]);
+        return null;
+      }
+
+      var baseUrl = window.location.protocol+"//" + window.location.host;
+
+      var docId;
+      var shareId = "";
+      var isFirstLoad = false;
+
+      var isSaving = false;
+
+      function SaveFile() {
+        if (docId == null) return;
+
+        if (!isFirstLoad) return;
+
+        if (isSaving) return;
+
+        stringmd = editView.getMarkdown();
+
+        isSaving = true;
+
+        var obj = {};
+        obj.gid = docId;
+        obj.content = stringmd;
+
+        $.ajax({
+          url: baseUrl + "/api/md/edit",
+          type: "post",
+          data: JSON.stringify(obj),
+          contentType: "application/json",
+          success: function (ret) {
+            isSaving = false;
+
+            if (ret.code === 0) {
+              shareId = ret.data;
+              alert("保存成功");
+            } else {
+              alert(ret.message);
+            }
+          },
+          error: function (ret) {
+            isSaving = false;
+            alert("保存失败");
+          },
+        });
+      }
+
+      function initPasteImg(Editor) {
+        var doc = document.getElementById(Editor.id);
+        doc.addEventListener("paste", function (event) {
+          var items = (event.clipboardData || window.clipboardData).items;
+          var file = null;
+          if (items && items.length) {
+            for (var i = 0; i < items.length; i++) {
+              // if (items[i].type.indexOf('image') !== -1) {
+              //     file = items[i].getAsFile();
+              //     break;
+              // }
+              file = items[i].getAsFile();
+            }
+          } else {
+            alert("浏览器不支持粘贴图片！");
+            return;
+          }
+          if (!file) {
+            // console.log("粘贴内容非图片");
+            return;
+          }
+          uploadImg(file, Editor);
+        });
+
+        var dashboard = document.getElementById(Editor.id);
+        dashboard.addEventListener("dragover", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        });
+        dashboard.addEventListener("dragenter", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        });
+        dashboard.addEventListener("drop", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var files = this.files || e.dataTransfer.files;
+          uploadImg(files[0], Editor);
+        });
+      }
+
+      function uploadImg(file, Editor) {
+        var formData = new FormData();
+        var fileName = new Date().getTime() + "." + file.name.split(".").pop();
+        formData.append("files", file, fileName);
+
+        $.ajax({
+          url:
+            Editor.settings.imageUploadURL +
+            "&date=" +
+            new Date().toDateString(),
+          type: "post",
+          data: formData,
+          processData: false,
+          contentType: false,
+          dataType: "json",
+          success: function (msg) {
+            if (msg.code === 0) {
+              var url = msg.data;
+              if (/\.(png|jpg|jpeg|gif|bmp|ico)$/.test(url)) {
+                Editor.insertValue("![图片](" + url + ' "图片")');
+              } else {
+                Editor.insertValue("[附件](" + url + ")");
+              }
+            } else {
+              alert(msg.message);
+            }
+          },
+        });
+      }
+
+      function LoadData() {
+        if (docId == null) return;
+
+        isFirstLoad = true;
+
+        var isReload = $.cookie("isReload");
+
+        if (isReload == null) {
+          $.get(baseUrl + "/api/md/view?id=" + docId, function (data, status) {
+            if (status == "success") {
+              if (data.code === 0) {
+                editView.setMarkdown(data.data.content);
+                document.title=data.data.title+"("+data.data.count+")";
+                
+              } else {
+                alert(data.message);
+              }
+            } else {
+              alert("获取内容失败,状态:" + status);
+            }
+          });
+
+          return;
+        }
+
+        if (isReload == "1") {
+          editView.setMarkdown($.cookie("markdown"));
+          $.cookie("isReload", "0");
+        } else {
+          $.get(baseUrl + "/api/md/view?id=" + docId, function (data, status) {
+            if (status == "success") {
+              if (data.code === 0) {
+                editView.setMarkdown(data.data.content);
+                document.title=data.data.title+"("+data.data.count+")";
+              } else {
+                alert(data.message);
+              }
+            } else {
+              alert("获取内容失败,状态:" + status);
+            }
+          });
+        }
+      }
+
+      var cacheHtml = "";
+
+      $(function () {
+        var widgets = [];
+
+        docId = GetUrlParam("id");
+
+        if (docId == null) {
+          alert("文档不存在！");
+          return;
+        }
+
+        var bd =
+          document.compatMode && document.compatMode == "CSS1Compat"
+            ? document.documentElement
+            : document.body;
+
+        editView = editormd("editormd-view", {
+          width: "100%",
+          height: bd.clientHeight - 15,
+          path: "lib/",
+          taskList: true,
+          tex: true,
+          flowChart: true,
+          sequenceDiagram: true,
+          codeFold: true,
+          disabledKeyMaps: ["Ctrl-B", "F11", "F10"],
+          toolbarIconsClass: {
+            savefile: "fa-floppy-o",
+            share: "fa-share-alt",
+            print: "fa-print",
+          },
+
+          imageUpload: true,
+          imageFormats: ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+          imageUploadURL: baseUrl + "/api/yq/upimg?type=markdown",
+          editorTheme: "mdn-like",
+          toolbarHandlers: {
+            savefile: function (cm, icon, cursor, selection) {
+              SaveFile();
+            },
+            share: function (cm, icon, cursor, selection) {
+              if (shareId != null && shareId.length > 0) {
+                window.open(baseUrl + "/md/view.html?toc=1&id=" + shareId);
+              } else {
+                alert("保存失败或没有保存,不能使用分享！");
+              }
+            },
+            print: function (cm, icon, cursor, selection) {
+              $.cookie("markdown", editView.getMarkdown());
+              $.cookie("isReload", "1");
+
+              editView.previewing();
+
+              var html = $(".editormd-preview").html();
+
+              editView.previewed();
+
+              window.document.body.innerHTML = html;
+
+              window.print();
+
+              window.location.reload();
+            },
+          },
+          onchange: function () {
+            $("#test").remove();
+            return;
+            var cm = this.cm;
+            var cursor = cm.getCursor();
+
+            widgets.push(
+              cm.addWidget(
+                { line: cursor.line, ch: cursor.ch },
+                $(
+                  "<p style='z-index:100000;background:red;color:#fff;padding:5px;' id='test'>fsdfsdfsdf</p>"
+                )[0],
+                true
+              )
+            );
+            //console.log(cm.getCursor(), cm.getLine(cursor.line), cm.getLineTokens(cursor.line));
+          },
+
+          onload: function () {
+            var keyMap = {
+              "Ctrl-S": function (cm) {
+                SaveFile();
+              },
+              "Ctrl-A": function (cm) {
+                cm.execCommand("selectAll");
+              },
+            };
+
+            this.cm.on("keyup", function (cm) {});
+
+            var keyMap2 = {
+              "Ctrl-T": function (cm) {
+                alert("Ctrl+T");
+              },
+            };
+
+            this.addKeyMap(keyMap);
+            this.addKeyMap(keyMap2);
+            this.removeKeyMap(keyMap2);
+
+            LoadData();
+
+            initPasteImg(this);
+          },
+        });
+      });
+    </script>
+  </body>
+</html>
