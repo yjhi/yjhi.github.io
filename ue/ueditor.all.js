@@ -23431,8 +23431,6 @@ UE.commands['insertparagraph'] = {
     }
 };
 
-
-
 // plugins/webapp.js
 /**
  * 百度应用
@@ -23806,12 +23804,12 @@ UE.plugin.register('autoupload', function (){
             errorHandler(me.getLang('autoupload.exceedSizeError'));
             return;
         }
-        /* 判断文件格式是否超出允许 */
-        var fileext = file.name ? file.name.substr(file.name.lastIndexOf('.')):'';
-        if ((fileext && filetype != 'image') || (allowFiles && (allowFiles.join('') + '.').indexOf(fileext.toLowerCase() + '.') == -1)) {
-            errorHandler(me.getLang('autoupload.exceedTypeError'));
-            return;
-        }
+        // /* 判断文件格式是否超出允许 */
+        // var fileext = file.name ? file.name.substr(file.name.lastIndexOf('.')):'';
+        // if ((fileext && filetype != 'image') || (allowFiles && (allowFiles.join('') + '.').indexOf(fileext.toLowerCase() + '.') == -1)) {
+        //     errorHandler(me.getLang('autoupload.exceedTypeError'));
+        //     return;
+        // }
 
         /* 创建Ajax并提交 */
         var xhr = new XMLHttpRequest(),
