@@ -639,7 +639,7 @@ function exec(scrawlObj) {
                         responseObj = eval("(" + xhr.responseText + ")");
                         if (responseObj.state == "SUCCESS") {
                             var imgObj = {},
-                                url = editor.options.scrawlUrlPrefix + responseObj.url;
+                                url =editor.staticUrl+"/"+ editor.options.scrawlUrlPrefix + responseObj.url;
                             imgObj.src = url;
                             imgObj._src = url;
                             imgObj.alt = responseObj.original || '';

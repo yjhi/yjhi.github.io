@@ -6741,6 +6741,7 @@ var fillCharReg = new RegExp(domUtils.fillChar, 'g');
         EventBase.call(me);
         me.commands = {};
         me.options = utils.extend(utils.clone(options || {}), UEDITOR_CONFIG, true);
+        me.staticUrl=window.STATIC_URL;
         me.shortcutkeys = {};
         me.inputRules = [];
         me.outputRules = [];
@@ -23762,7 +23763,7 @@ UE.plugin.register('autoupload', function (){
                 me.options.themePath + me.options.theme +
                 '/images/spacer.gif" title="' + (me.getLang('autoupload.loading') || '') + '" >';
             successHandler = function(data) {
-                var link = urlPrefix + data.url,
+                var link = me.staticUrl+"/"+ urlPrefix + data.url,
                     loader = me.document.getElementById(loadingId);
                 if (loader) {
                     loader.setAttribute('src', link);
@@ -23780,7 +23781,7 @@ UE.plugin.register('autoupload', function (){
                 '/images/spacer.gif" title="' + (me.getLang('autoupload.loading') || '') + '" >' +
                 '</p>';
             successHandler = function(data) {
-                var link = urlPrefix + data.url,
+                var link = me.staticUrl+"/"+urlPrefix + data.url,
                     loader = me.document.getElementById(loadingId);
 
                 var rng = me.selection.getRange(),
@@ -24519,7 +24520,7 @@ UE.plugin.register('simpleupload', function (){
                             body = (iframe.contentDocument || iframe.contentWindow.document).body,
                             result = body.innerText || body.textContent || '';
                         json = (new Function("return " + result))();
-                        link = me.options.imageUrlPrefix + json.url;
+                        link =me.staticUrl+"/"+ me.options.imageUrlPrefix + json.url;
                         if(json.state == 'SUCCESS' && json.url) {
                             loader = me.document.getElementById(loadingId);
                             loader.setAttribute('src', link);
@@ -24793,7 +24794,7 @@ UE.plugin.register('insertfile', function (){
                         title = item.title || item.url.substr(item.url.lastIndexOf('/') + 1);
                         html += '<p style="line-height: 16px;">' +
                             '<img style="vertical-align: middle; margin-right: 2px;" src="'+ icon + '" _src="' + icon + '" />' +
-                            '<a style="font-size:12px; color:#0066cc;" href="' + item.url +'" title="' + title + '">' + title + '</a>' +
+                            '<a style="font-size:12px; color:#0066cc;" href="' +me.staticUrl+"/"+ item.url +'" title="' + title + '">' + title + '</a>' +
                             '</p>';
                     }
                     me.execCommand('insertHtml', html);
